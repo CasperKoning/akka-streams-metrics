@@ -17,7 +17,7 @@ class AkkaStreamsExample(settings: Settings)
   (implicit actorSystem: ActorSystem, ec: ExecutionContext, materializer: Materializer)
   extends LazyLogging {
 
-  var currentNumberOfElements = 1
+  var currentNumberOfElements = 25
   var currentSleepTime = 100
 
   var killSwitch: Option[KillSwitch] = None
@@ -26,12 +26,14 @@ class AkkaStreamsExample(settings: Settings)
     .tick(0.seconds, 1.second, Tick)
     .alsoTo(Metrics.startOfSourceCounter())
     .flatMapConcat { _ => Source.repeat(Tick2).take(numberOfElements) }
-    .alsoTo(Metrics.repeatCounter())
-    .batch(max = 1000, seed = i => i :: Nil) { (acc, next) => next :: acc }
+    .alsoTo(Metrics.emitCounter())
+    .batch(max = 50, seed = i => i :: Nil) { (acc, next) => next :: acc }
     .alsoTo(Metrics.batchSizeHistogram())
-    .alsoTo(Metrics.batchCounter())
-    .mapAsync(1) { a => Future { Thread.sleep(sleepTime) ; a }}
-    .alsoTo(Metrics.finalResultCounter())
+    .mapAsync(1) { a => Future { Metrics.time("sleeping") {
+      Thread.sleep(sleepTime)
+      a
+    }}}
+    .alsoTo(Metrics.batchesProcessedCounter())
 
   def start() = {
     val (ks, done) = source.viaMat(KillSwitches.single)(Keep.right)

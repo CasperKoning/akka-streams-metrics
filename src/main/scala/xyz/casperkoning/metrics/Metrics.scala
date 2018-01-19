@@ -1,21 +1,21 @@
 package xyz.casperkoning.metrics
 
-import akka.stream.scaladsl.{Flow, Sink}
+import akka.stream.scaladsl.Sink
 import kamon.Kamon
+import kamon.trace.Tracer
 
 object Metrics {
 
 
   private val startCounter = Kamon.metrics.counter("start-of-source")
-  private val repeatedCounter = Kamon.metrics.counter("repeated-elements")
+  private val emittedCounter = Kamon.metrics.counter("elements-emitted")
   private val batchHistogram = Kamon.metrics.histogram("batch-size")
-  private val batchesCounter = Kamon.metrics.counter("batches")
-  private val finalResultsCounter = Kamon.metrics.counter("final-results")
+  private val finalResultsCounter = Kamon.metrics.counter("batch-processed")
 
   def startOfSourceCounter[T]() = Sink.foreach { _: T => startCounter.increment() }
-  def repeatCounter[T]() = Sink.foreach { _: T => repeatedCounter.increment() }
+  def emitCounter[T]() = Sink.foreach { _  : T => emittedCounter.increment() }
   def batchSizeHistogram[T]() = Sink.foreach { batch: Seq[T] => batchHistogram.record(batch.size)}
-  def batchCounter[T]() = Sink.foreach { _: T => batchesCounter.increment()}
-  def finalResultCounter[T]() = Sink.foreach { _: T => finalResultsCounter.increment()}
+  def batchesProcessedCounter[T]() = Sink.foreach { _: T => finalResultsCounter.increment()}
 
+  def time[T](traceName: String)(body: => T): T = Tracer.withNewContext(traceName, autoFinish = true)(body)
 }

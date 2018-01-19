@@ -14,7 +14,7 @@ object Main extends App {
   Kamon.start()
 
   implicit val config = ConfigFactory.load()
-  implicit val system = ActorSystem("numberwang", config)
+  implicit val system = ActorSystem("akka-streams-metrics", config)
   implicit val executionContext = system.dispatcher
   implicit val materializer = ActorMaterializer()
 
@@ -23,7 +23,9 @@ object Main extends App {
   val akkaStreamsExample = new AkkaStreamsExample(settings)
   akkaStreamsExample.start()
 
-  val service = new NumberwangService(settings, akkaStreamsExample)
+  val api = new Api(akkaStreamsExample)
+
+  val service = new HttpServer(settings, api)
   service.start()
 
 

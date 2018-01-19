@@ -7,15 +7,13 @@ import akka.http.scaladsl.Http.ServerBinding
 import akka.stream._
 import akka.http.scaladsl._
 import xyz.casperkoning.config._
-import xyz.casperkoning.streams.AkkaStreamsExample
 
-class NumberwangService(val settings: Settings, akkaStreamsExample: AkkaStreamsExample)(implicit actorSystem: ActorSystem, executionContext: ExecutionContext, materializer: Materializer)
-  extends ApiRoutes {
+class HttpServer(val settings: Settings, api: Api)(implicit actorSystem: ActorSystem, executionContext: ExecutionContext, materializer: Materializer) {
   private var serverBinding: Option[ServerBinding] = None
 
   def start() = {
     Http().bindAndHandle(
-      handler = routes(akkaStreamsExample),
+      handler = api.routes,
       interface = settings.Http.interface,
       port = settings.Http.port
     ) foreach {
