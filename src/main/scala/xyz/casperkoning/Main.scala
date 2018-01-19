@@ -10,7 +10,11 @@ import com.typesafe.config.ConfigFactory
 import xyz.casperkoning.config._
 import xyz.casperkoning.http._
 
+import kamon._
+
 object Main extends App {
+  Kamon.start()
+
   implicit val config = ConfigFactory.load()
   implicit val system = ActorSystem("numberwang", config)
   implicit val executionContext = system.dispatcher
@@ -24,6 +28,7 @@ object Main extends App {
       service.stop()
       materializer.shutdown()
       Await.result(system.terminate(), 10.seconds)
+      Kamon.shutdown()
     }
   })
 }
