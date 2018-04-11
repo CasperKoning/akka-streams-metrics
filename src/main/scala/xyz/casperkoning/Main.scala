@@ -11,7 +11,7 @@ import kamon._
 import xyz.casperkoning.streams.AkkaStreamsExample
 
 object Main extends App {
-  Kamon.start()
+  Kamon.loadReportersFromConfig()
 
   implicit val config = ConfigFactory.load()
   implicit val system = ActorSystem("akka-streams-metrics", config)
@@ -28,14 +28,12 @@ object Main extends App {
   val service = new HttpServer(settings, api)
   service.start()
 
-
   Runtime.getRuntime.addShutdownHook(new Thread(){
     override def run(): Unit = {
       akkaStreamsExample.stop()
       service.stop()
       materializer.shutdown()
       Await.result(system.terminate(), 10.seconds)
-      Kamon.shutdown()
     }
   })
 }

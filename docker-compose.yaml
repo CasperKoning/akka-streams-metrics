@@ -1,25 +1,30 @@
 ---
 version: '2'
 services:
-  influxdb:
-    image: influxdb:latest
-    hostname: influxdb
-    ports:
-      - "8083:8083"
-      - "8086:8086"
-      - "8090:8090"
-    environment:
-      INFLUXDB_DB: akka_streams
+  prometheus:
+    image: quay.io/prometheus/prometheus
+    hostname: prometheus
+    depends_on: 
+      - akka-streams-app
     volumes:
-      - ./influxdb:/var/lib/influxdb
-    command: influxd
+      - ./config/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./data/prometheus:/prometheus
+    ports:
+      - "9090:9090"
+
+  akka-streams-app:
+    image: akka-streams-metrics
+    hostname: akka-streams-app
+    ports:
+      - "8080:8080"
+      - "9095:9095"
 
   grafana:
     image: grafana/grafana:latest
     hostname: grafana
     depends_on:
-      - influxdb
+      - prometheus
     ports:
       - "3000:3000"
     volumes:
-      - ./grafana:/var/lib/grafana
+      - ./data/grafana:/var/lib/grafana

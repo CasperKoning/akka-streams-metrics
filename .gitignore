@@ -16,6 +16,5 @@ dist
 /.settings
 hk-debug
 
-grafana/*
-influxdb/*
+data/*
 native
